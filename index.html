@@ -66,6 +66,10 @@
   --c-scfrag:#1a0808;--b-scfrag:#881111;--t-scfrag:#ff5555;
   --c-scref:#081818;--b-scref:#116666;--t-scref:#33cccc;
   --c-scgate:#0a0a1a;--b-scgate:#444499;--t-scgate:#9999ee;
+  /* Class Diagram */
+  --c-cdclass:#1e293b; --b-cdclass:#f97316; --t-cdclass:#f97316;
+  --c-cdinterface:#1e293b; --b-cdinterface:#f97316; --t-cdinterface:#f97316;
+  --c-cdenum:#1e293b; --b-cdenum:#f97316; --t-cdenum:#f97316;
 }
 body.light{
   --bg:#f4f6fa;--panel:#ffffff;--surf:#eef1f7;--hov:#e4e8f2;
@@ -124,7 +128,7 @@ body.light{
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--tx);height:100vh;overflow:hidden;display:flex;flex-direction:column;user-select:none;transition:background .2s,color .2s;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--tx);height:100vh;width:100vw;overflow:hidden;display:flex;flex-direction:column;user-select:none;transition:background .2s,color .2s;}
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -423,6 +427,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--tx);
   <button class="mtab"    id="tab-fsm" onclick="setMode('fsm')">FSM</button>
   <button class="mtab"    id="tab-bt"  onclick="setMode('bt')">비헤이비어 트리</button>
   <button class="mtab"    id="tab-sc"  onclick="setMode('sc')">시퀀스 차트</button>
+  <button class="mtab"    id="tab-cd"  onclick="setMode('cd')">클래스 다이어그램</button>
   <button class="hbtn" onclick="spawnModeDemo()" title="현재 탭의 예시를 새 시트로 생성">예시 생성</button>
   <div class="hsep"></div>
   <input class="pname" id="pname" value="Untitled_Flow">
@@ -519,6 +524,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--tx);
         <div class="pi" draggable="true" data-type="scfrag" data-label="loop"><svg width="34" height="22"><rect x="1" y="1" width="32" height="20" fill="var(--c-scfrag)" stroke="var(--b-scfrag)" stroke-width="1.4" fill-opacity="0.5"/><rect x="1" y="1" width="10" height="7" fill="var(--b-scfrag)" opacity="0.7"/><text x="6" y="5" font-size="6" fill="white" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif">loop</text></svg><span class="pil" style="color:var(--t-scfrag)">프래그먼트</span></div>
         <div class="pi" draggable="true" data-type="scgate" data-label="Gate"><svg width="34" height="14"><line x1="1" y1="7" x2="33" y2="7" stroke="var(--b-scgate)" stroke-width="1"/><circle cx="17" cy="7" r="6" fill="var(--c-scgate)" stroke="var(--b-scgate)" stroke-width="1.4"/></svg><span class="pil" style="color:var(--t-scgate)">게이트</span></div>
       </div>
+      
+      <!-- CD -->
+      <div id="pcd" style="display:none">
+        <div class="ps">클래스 다이어그램</div>
+        <div class="pi" draggable="true" data-type="cdclass" data-label="Class"><svg width="34" height="24"><rect x="1" y="1" width="32" height="22" rx="4" fill="var(--c-cdclass)" stroke="var(--b-cdclass)" stroke-width="1.4"/><line x1="1" y1="8" x2="33" y2="8" stroke="var(--b-cdclass)" stroke-width="1.2"/><line x1="1" y1="16" x2="33" y2="16" stroke="var(--b-cdclass)" stroke-width="1.2"/></svg><span class="pil" style="color:var(--t-cdclass)">클래스</span></div>
+        <div class="pi" draggable="true" data-type="cdinterface" data-label="Interface"><svg width="34" height="24"><rect x="1" y="1" width="32" height="22" rx="4" fill="var(--c-cdinterface)" stroke="var(--b-cdinterface)" stroke-width="1.4"/><line x1="1" y1="10" x2="33" y2="10" stroke="var(--b-cdinterface)" stroke-width="1.2"/><text x="17" y="5" font-size="5" fill="var(--t-cdinterface)" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif">«intf»</text></svg><span class="pil" style="color:var(--t-cdinterface)">인터페이스</span></div>
+        <div class="pi" draggable="true" data-type="cdenum" data-label="Enum"><svg width="34" height="20"><rect x="1" y="1" width="32" height="18" rx="4" fill="var(--c-cdenum)" stroke="var(--b-cdenum)" stroke-width="1.4"/><line x1="1" y1="8" x2="33" y2="8" stroke="var(--b-cdenum)" stroke-width="1.2"/></svg><span class="pil" style="color:var(--t-cdenum)">열거형(Enum)</span></div>
+        <div class="pi" draggable="true" data-type="scnote" data-label="Note"><svg width="34" height="20"><path d="M1,1 L26,1 L33,8 L33,19 L1,19 Z" fill="var(--c-scnote)" stroke="var(--b-scnote)" stroke-width="1.4"/></svg><span class="pil" style="color:var(--t-scnote)">메모(Note)</span></div>
+      </div>
     </div>
 
     <!-- 툴 모음 (좌측 하단으로 이동) -->
@@ -556,6 +570,28 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--tx);
         <marker id="ad" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="var(--edge-n)"/></marker>
         <marker id="as" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="var(--edge-hl)"/></marker>
         <marker id="ao" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ffaa33"/></marker>
+        <!-- UML 클래스 다이어그램 전용 마커 -->
+        <!-- 상속/구현 : 속이 빈 삼각형 -->
+        <marker id="uml-inherit" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto">
+          <polygon points="0 0,12 5,0 10" fill="var(--bg)" stroke="var(--edge-n)" stroke-width="1.4"/>
+        </marker>
+        <marker id="uml-inherit-hl" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto">
+          <polygon points="0 0,12 5,0 10" fill="var(--acd)" stroke="var(--edge-hl)" stroke-width="1.4"/>
+        </marker>
+        <!-- 집합(aggregation): 속이 빈 마름모 (출발점) -->
+        <marker id="uml-aggregate" markerWidth="14" markerHeight="8" refX="13" refY="4" orient="auto-start-reverse">
+          <polygon points="0 4,7 0,14 4,7 8" fill="var(--bg)" stroke="var(--edge-n)" stroke-width="1.4"/>
+        </marker>
+        <marker id="uml-aggregate-hl" markerWidth="14" markerHeight="8" refX="13" refY="4" orient="auto-start-reverse">
+          <polygon points="0 4,7 0,14 4,7 8" fill="var(--acd)" stroke="var(--edge-hl)" stroke-width="1.4"/>
+        </marker>
+        <!-- 합성(composition): 속이 찬 마름모 (출발점) -->
+        <marker id="uml-compose" markerWidth="14" markerHeight="8" refX="13" refY="4" orient="auto-start-reverse">
+          <polygon points="0 4,7 0,14 4,7 8" fill="var(--edge-n)" stroke="var(--edge-n)" stroke-width="1.2"/>
+        </marker>
+        <marker id="uml-compose-hl" markerWidth="14" markerHeight="8" refX="13" refY="4" orient="auto-start-reverse">
+          <polygon points="0 4,7 0,14 4,7 8" fill="var(--edge-hl)" stroke="var(--edge-hl)" stroke-width="1.2"/>
+        </marker>
       </defs>
       <g id="VP">
         <g id="EL"></g>
@@ -899,6 +935,10 @@ const S={
   scnote:    {w:160,h:64,c:'--c-scnote',   b:'--b-scnote',  t:'--t-scnote',  label:'Note',    end:false,draw:dScNote},
   scfrag:    {w:220,h:140,c:'--c-scfrag',  b:'--b-scfrag',  t:'--t-scfrag',  label:'loop',    end:false,draw:dScFrag},
   scgate:    {w:24, h:24, c:'--c-scgate',  b:'--b-scgate',  t:'--t-scgate',  label:'',        end:false,draw:dConnector},
+  // Class Diagram
+  cdclass:   {w:160,h:80,c:'--c-cdclass',  b:'--b-cdclass', t:'--t-cdclass', label:'Class',   end:false,draw:dCDClass},
+  cdinterface:{w:160,h:80,c:'--c-cdinterface',b:'--b-cdinterface',t:'--t-cdinterface',label:'Interface',end:false,draw:dCDInterface},
+  cdenum:    {w:140,h:80,c:'--c-cdenum',   b:'--b-cdenum',  t:'--t-cdenum',  label:'Enum',    end:false,draw:dCDEnum},
 };
 
 function nW(n){return n.sw||S[n.type]?.w||140;}
@@ -939,6 +979,10 @@ function dScMsg(w,h){return `<line x1="0" y1="${h/2}" x2="${w-8}" y2="${h/2}" st
 function dScMsgDash(w,h){return `<line x1="0" y1="${h/2}" x2="${w-8}" y2="${h/2}" stroke-width="1.8" stroke-dasharray="5 3"/><polygon points="${w-16},${h/2-5} ${w},${h/2} ${w-16},${h/2+5}"/>`;}
 function dScNote(w,h){const f=10;return `<polygon points="0,0 ${w-f},0 ${w},${f} ${w},${h} 0,${h}"/><line x1="${w-f}" y1="0" x2="${w-f}" y2="${f}" stroke-width="1" opacity=".6"/><line x1="${w-f}" y1="${f}" x2="${w}" y2="${f}" stroke-width="1" opacity=".6"/>`;}
 function dScFrag(w,h){return `<rect x="0" y="0" width="${w}" height="${h}" fill-opacity="0.35"/><rect x="0" y="0" width="28" height="14" opacity=".8"/>`;}
+
+function dCDClass(w,h){return `<rect x="0" y="0" width="${w}" height="${h}" rx="2" ry="2"/><g class="cd-props"></g>`;}
+function dCDInterface(w,h){return `<rect x="0" y="0" width="${w}" height="${h}" rx="2" ry="2"/><text x="${w/2}" y="10" font-size="10" fill="currentColor" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif">«interface»</text><g class="cd-props"></g>`;}
+function dCDEnum(w,h){return `<rect x="0" y="0" width="${w}" height="${h}" rx="2" ry="2"/><text x="${w/2}" y="10" font-size="10" fill="currentColor" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif">«enum»</text><g class="cd-props"></g>`;}
 
 // Anchors
 function getAnchors(n){
@@ -1063,11 +1107,78 @@ function resolveVars(str){
   });
 }
 
+function escapeHtml(s){
+  const d=document.createElement('span');
+  d.textContent=String(s);
+  return d.innerHTML;
+}
+
 // ══════════════════════════════════════════════════
 // RENDER NODE
 // ══════════════════════════════════════════════════
 function renderNode(id){
   const n=nodes[id]; const s=S[n.type]; if(!s) return;
+  
+  if(n.type.startsWith('cd')){
+    const isEnum = n.type==='cdenum';
+    const isInterface = n.type==='cdinterface';
+    let attrs=[], meths=[];
+
+    // New flat-string format (from textarea editor)
+    if(typeof n.properties?.cd_attributes === 'string' || typeof n.properties?.cd_methods === 'string'){
+      attrs = (n.properties.cd_attributes||'').split('\n').map(l=>l.trim()).filter(Boolean);
+      if(!isEnum) meths = (n.properties.cd_methods||'').split('\n').map(l=>l.trim()).filter(Boolean);
+    } else {
+      // Legacy key-value fallback
+      Object.entries(n.properties||{}).forEach(([k,v])=>{
+        const t = v ? `${k}: ${v}` : k;
+        if(k.includes('(')) meths.push(t); else attrs.push(t);
+      });
+    }
+
+    const headerH = isInterface ? 34 : 26; // interface has «interface» label above name
+    const lh = 15;
+    const attrPad = 8;
+    const methPad = 8;
+    const autoAh = Math.max(24, attrs.length * lh + attrPad);
+    const autoMh = isEnum ? 0 : Math.max(24, meths.length * lh + methPad);
+    const autoH = headerH + autoAh + autoMh;
+
+    // Only auto-assign height if user has not manually resized
+    if(!n._cdManualH) n.sh = autoH;
+
+    const W2 = nW(n), H2 = nH(n);
+    // Recompute sections proportionally when user manually sets height
+    let ah = autoAh, mh = autoMh;
+    if(n._cdManualH && !isEnum){
+      const total = H2 - headerH;
+      ah = Math.round(total * 0.5);
+      mh = total - ah;
+    } else if(n._cdManualH && isEnum){
+      ah = H2 - headerH;
+      mh = 0;
+    }
+
+    let html = `<line x1="0" y1="${headerH}" x2="${W2}" y2="${headerH}" stroke-width="1.2" stroke="var(${s.b})"/>`;
+    if(!isEnum){
+      html += `<line x1="0" y1="${headerH + ah}" x2="${W2}" y2="${headerH + ah}" stroke-width="1.2" stroke="var(${s.b})"/>`;
+    }
+
+    let cy = headerH + attrPad + 2;
+    attrs.forEach(a=>{
+      html+=`<text x="6" y="${cy}" font-size="11" fill="var(--tx)" text-anchor="start" dominant-baseline="auto">${escapeHtml(a)}</text>`;
+      cy+=lh;
+    });
+    if(!isEnum){
+      cy = headerH + ah + methPad + 2;
+      meths.forEach(m=>{
+        html+=`<text x="6" y="${cy}" font-size="11.5" fill="var(--tx2)" text-anchor="start" dominant-baseline="auto" font-style="italic">${escapeHtml(m)}</text>`;
+        cy+=lh;
+      });
+    }
+    n.propsHTML = html;
+  }
+
   const W=nW(n), H=nH(n);
   document.getElementById('ng-'+id)?.remove();
   const g=mk('g'); g.id='ng-'+id; g.classList.add('ng');
@@ -1077,6 +1188,12 @@ function renderNode(id){
   // Use custom node fill colour if provided, otherwise fall back to the theme colour for this node type
   const fillCol = n.color ? n.color : `var(${s.c})`;
   sg.innerHTML=`<g fill="${fillCol}" stroke="var(${s.b})" stroke-width="1.7">${s.draw(W,H)}</g>`;
+  
+  if (n.propsHTML) {
+    const propsGroup = sg.querySelector('.cd-props');
+    if(propsGroup) propsGroup.innerHTML = n.propsHTML;
+  }
+  
   g.appendChild(sg);
 
   if(s.scLifeline){
@@ -1086,8 +1203,8 @@ function renderNode(id){
     g.appendChild(ll);
   }
 
-  // 노드 상단 내부에 노드 분류(타입) 뱃지 텍스트 표시
-  if(n.type !== 'scfrag') {
+  // 노드 상단 내부에 노드 분류(타입) 뱃지 텍스트 표시 (CD 노드는 자체 헤더가 있으므로 제외)
+  if(n.type !== 'scfrag' && !n.type.startsWith('cd')) {
     const typetx = mk('text');
     typetx.classList.add('ntype');
     typetx.setAttribute('x', W/2); 
@@ -1102,15 +1219,23 @@ function renderNode(id){
 
   const hasLabel = !!n.label && n.type !== 'scfrag';
   // 타입 뱃지가 들어왔으므로 메인 라벨은 살짝 아래로(4px), ID는 더 아래로(18px) 밀어내서 균형 조정
-  const yOffsetMain = hasLabel ? 4 : 0;
+  // 단, CD 모드의 경우 타이틀을 상단 Header 쪽에 위치.
+  const isCD = n.type.startsWith('cd');
+  const yOffsetMain = hasLabel ? (isCD ? 0 : 4) : 0;
   const yOffsetSub = hasLabel ? 18 : 12;
 
   if(n.label){
     const tx=mk('text'); tx.classList.add('ntx');
-    tx.setAttribute('x',W/2); 
-    tx.setAttribute('y',H*(s.tyRatio||0.5) + (n.type==='scfrag'?0:yOffsetMain));
+    if (isCD) {
+      tx.setAttribute('x',W/2);
+      tx.setAttribute('y', n.type === 'cdclass' ? 14 : 19); // Place comfortably in the 26px header
+      tx.style.fontWeight = 'bold';
+    } else {
+      tx.setAttribute('x',W/2); 
+      tx.setAttribute('y',H*(s.tyRatio||0.5) + (n.type==='scfrag'?0:yOffsetMain));
+    }
     // 텍스트 가시성을 높이기 위해 노드 지정 색상 또는 전역 변수(--tx) 사용
-    tx.style.fill = n.txtColor ? n.txtColor : 'var(--tx)';
+    tx.style.fill = n.txtColor ? n.txtColor : (isCD ? `var(${s.t})` : 'var(--tx)');
     tx.textContent=n.label;
     g.appendChild(tx);
     if(n.type==='scfrag'){
@@ -1950,12 +2075,32 @@ function renderEdge(id){
 
   const hit=mk('path'); hit.classList.add('ehit'); hit.setAttribute('d',pathD); g.appendChild(hit);
   const ep=mk('path'); ep.classList.add('ep'); ep.id='ep-'+id; ep.setAttribute('d',pathD);
+  // UML 관계 마커 적용 (class diagram)
+  const rel = e.relation || '';
+  if(rel === 'inherit'){
+    ep.style.markerEnd = 'url(#uml-inherit)';
+    ep.style.markerStart = '';
+  } else if(rel === 'implement'){
+    ep.style.markerEnd = 'url(#uml-inherit)';
+    ep.style.strokeDasharray = '6 4';
+    ep.style.markerStart = '';
+  } else if(rel === 'aggregate'){
+    ep.style.markerStart = 'url(#uml-aggregate)';
+    ep.style.markerEnd = '';
+  } else if(rel === 'compose'){
+    ep.style.markerStart = 'url(#uml-compose)';
+    ep.style.markerEnd = '';
+  } else if(rel === 'depend'){
+    ep.style.strokeDasharray = '6 4';
+  }
   // 커스텀 색상: 선 색상 + 화살표 마커를 동일 색으로 동기화
   if(e.color){
     ep.classList.add('ec');           // CSS sel override 방지
     ep.style.stroke = e.color;
-    const mid = ensureMarker(id, e.color);
-    ep.style.markerEnd = `url(#${mid})`;
+    if(!rel){
+      const mid = ensureMarker(id, e.color);
+      ep.style.markerEnd = `url(#${mid})`;
+    }
   }
   g.appendChild(ep);
 
@@ -2649,6 +2794,11 @@ window.addEventListener('mouseup',e=>{
   if(dt==='pan') cvs.classList.remove('cg');
   else if(dt==='resize') {
     flushEdgeRedraw();
+    // Mark CD nodes as manually resized so auto-height doesn't override
+    if(drag.moved && nodes[drag.id]?.type?.startsWith('cd')){
+      nodes[drag.id]._cdManualH = true;
+      renderNode(drag.id);
+    }
     const eids = autoCorrectStepEdgesForNodes([drag.id]);
     eids.forEach(renderEdge);
     selItem(drag.id);
@@ -2971,6 +3121,7 @@ function pasteSelection(){
     if(src.lineStyle) e.lineStyle=src.lineStyle;
     if(src.color) e.color=src.color;
     if(src.txtColor) e.txtColor=src.txtColor;
+    if(src.relation) e.relation=src.relation;
     if(src.manualPts&&src.manualPts.length>=2){
       const shifted=src.manualPts.map(pt=>[pt[0]+dx,pt[1]+dy]);
       const fromW=anchorW(from,e.fromA), toW=anchorW(to,e.toA);
@@ -3024,6 +3175,18 @@ function updateInspector(){
           <option value="straight" ${edge.lineStyle==='straight'?'selected':''}>📏 직선 (Straight)</option>
         </select>
       </div>
+      <div class="fg">
+        <div class="fl">UML 관계 유형</div>
+        <select class="fi" id="erel" style="cursor:pointer">
+          <option value="" ${!edge.relation?'selected':''}>─▶ 기본 화살표</option>
+          <option value="inherit" ${edge.relation==='inherit'?'selected':''}>─▷ 상속 (Inheritance)</option>
+          <option value="implement" ${edge.relation==='implement'?'selected':''}>- -▷ 구현 (Realization)</option>
+          <option value="aggregate" ${edge.relation==='aggregate'?'selected':''}>◇─ 집합 (Aggregation)</option>
+          <option value="compose" ${edge.relation==='compose'?'selected':''}>◆─ 합성 (Composition)</option>
+          <option value="depend" ${edge.relation==='depend'?'selected':''}>- -> 의존 (Dependency)</option>
+          <option value="assoc" ${edge.relation==='assoc'?'selected':''}>─ 연관 (Association)</option>
+        </select>
+      </div>
       <!-- Custom colour pickers for edge -->
       <div class="fg">
         <div class="fl">선 색상 (화살표 포함)</div>
@@ -3049,7 +3212,13 @@ function updateInspector(){
   document.getElementById('el').addEventListener('input',ev=>{edge.label=ev.target.value;renderEdge(eid);document.getElementById('eg-'+eid)?.classList.add('sel');});
   
   document.getElementById('els').addEventListener('change',ev=>{edge.lineStyle=ev.target.value;renderEdge(eid);document.getElementById('eg-'+eid)?.classList.add('sel');saveState('개별 선 스타일 변경');});
-
+  document.getElementById('erel')?.addEventListener('change',ev=>{
+    const v=ev.target.value;
+    if(v) edge.relation=v; else delete edge.relation;
+    renderEdge(eid);
+    document.getElementById('eg-'+eid)?.classList.add('sel');
+    saveState('UML 관계 유형 변경');
+  });
   // 선 색상 피커 + 초기화
   const ecColorI = document.getElementById('ec-color');
   if(ecColorI){
@@ -3092,6 +3261,86 @@ function updateInspector(){
 const n=nodes[selId]; if(!n) return;
   const s=S[n.type];
   badge.textContent=s?.label||n.type; badge.style.color=`var(${s?.t||'--tx2'})`;
+
+  const isCD = n.type.startsWith('cd');
+  const isEnum = n.type === 'cdenum';
+
+  if(isCD){
+    // Build CD-specific textarea editor
+    let attrVal='', methVal='';
+    if(typeof n.properties?.cd_attributes === 'string' || typeof n.properties?.cd_methods === 'string'){
+      attrVal = n.properties.cd_attributes || '';
+      methVal = n.properties.cd_methods || '';
+    } else {
+      // Convert legacy key-value to lines
+      Object.entries(n.properties||{}).forEach(([k,v])=>{
+        const t = v ? `${k}: ${v}` : k;
+        if(k.includes('(')) methVal += (methVal ? '\n' : '') + t;
+        else attrVal += (attrVal ? '\n' : '') + t;
+      });
+    }
+    const methSection = isEnum ? '' : `
+    <div class="fg" style="margin-top:4px;">
+      <div class="fl">메서드 (Methods) <span style="font-size:9px;color:var(--txd)">한 줄에 하나</span></div>
+      <textarea id="cd-meth" class="fi" style="height:80px;resize:vertical;font-size:10.5px;line-height:1.6" placeholder="+ update(): void${String.fromCharCode(10)}+ getId(): int">${escAttr(methVal)}</textarea>
+    </div>`;
+    body.innerHTML=`
+    <div class="fg"><div class="fl">Node ID</div><input class="fi" value="${escAttr(n.id)}" readonly></div>
+    <div class="fg"><div class="fl">클래스 이름</div><input class="fi" id="nl" value="${escAttr(n.label||'')}"></div>
+    <div class="fsep"></div>
+    <div class="fg">
+      <div class="fl">속성 (Attributes) <span style="font-size:9px;color:var(--txd)">한 줄에 하나</span></div>
+      <textarea id="cd-attr" class="fi" style="height:90px;resize:vertical;font-size:10.5px;line-height:1.6" placeholder="+ name: string${String.fromCharCode(10)}- age: int${String.fromCharCode(10)}# id: int">${escAttr(attrVal)}</textarea>
+    </div>
+    ${methSection}
+    <div class="fsep"></div>
+    <div class="phd"><div class="ptt">크기 및 배치</div></div>
+    <div class="frow">
+      <div class="fhalf"><div class="fl">너비</div><input class="fi" id="nw" type="number" value="${Math.round(nW(n))}" min="80" max="600" step="10"></div>
+      <div class="fhalf"><div class="fl">높이 (수동)</div><input class="fi" id="nh" type="number" value="${Math.round(nH(n))}" min="40" max="800" step="10"></div>
+    </div>
+    <button class="smb" id="cd-auto-h" title="속성 수에 맞춰 높이 자동 계산">↕ 높이 자동 조절</button>
+    <div class="frow" style="margin-top:4px;">
+      <button class="hbtn" id="node-front" style="flex:1" title="맨 앞으로">🔼</button>
+      <button class="hbtn" id="node-back" style="flex:1" title="맨 뒤로">🔽</button>
+    </div>
+    <div class="fsep"></div>
+    <button class="hbtn" id="node-delete" title="노드 삭제">🗑</button>`;
+
+    function applyCD(){
+      const a = document.getElementById('cd-attr')?.value||'';
+      const m = document.getElementById('cd-meth')?.value||'';
+      n.properties = { cd_attributes: a, cd_methods: m };
+      renderNode(selId); redrawEdges();
+    }
+    document.getElementById('cd-attr')?.addEventListener('input', applyCD);
+    document.getElementById('cd-meth')?.addEventListener('input', applyCD);
+    document.getElementById('cd-attr')?.addEventListener('change',()=>saveState('CD 속성 변경'));
+    document.getElementById('cd-meth')?.addEventListener('change',()=>saveState('CD 메서드 변경'));
+    document.getElementById('nl').addEventListener('input',ev=>{n.label=ev.target.value;renderNode(selId);redrawEdges();});
+    document.getElementById('nl').addEventListener('change',()=>saveState('레이블 변경'));
+    const cdNwI=document.getElementById('nw'), cdNhI=document.getElementById('nh');
+    const applyCDSize=()=>{
+      n.sw=Math.max(80,parseInt(cdNwI.value)||nW(n));
+      n.sh=Math.max(40,parseInt(cdNhI.value)||nH(n));
+      n._cdManualH = true;
+      renderNode(selId); redrawEdges(); selItem(selId);
+    };
+    cdNwI?.addEventListener('change',()=>{applyCDSize();saveState('너비 변경');});
+    cdNhI?.addEventListener('change',()=>{applyCDSize();saveState('높이 변경');});
+    document.getElementById('cd-auto-h')?.addEventListener('click',()=>{
+      delete n._cdManualH; delete n.sh;
+      renderNode(selId); redrawEdges(); selItem(selId);
+      saveState('높이 자동 조절');
+    });
+    document.getElementById('node-front')?.addEventListener('click',()=>nodeToFront(selId));
+    document.getElementById('node-back')?.addEventListener('click',()=>nodeToBack(selId));
+    document.getElementById('node-delete')?.addEventListener('click',()=>deleteSel());
+    if(typeof refreshTooltips === 'function') refreshTooltips();
+    return;
+  }
+
+  // Non-CD node inspector (original)
   const ph=Object.entries(n.properties).map(([k,v])=>`
     <div class="pr"><input class="pk" value="${escAttr(k)}" placeholder="키"><input class="pv" value="${escAttr(v)}" placeholder="값"><button class="dx" data-del-key="${escAttr(k)}">✕</button></div>`).join('');
   body.innerHTML=`
@@ -3121,7 +3370,7 @@ const n=nodes[selId]; if(!n) return;
   <div id="plist">${ph}</div>
   <div class="fsep"></div>
   <button class="hbtn" id="node-delete" title="노드 삭제">🗑</button>`;
-  
+
 document.getElementById('nl').addEventListener('change',ev=>{saveState('레이블 텍스트 변경');});
 document.getElementById('nl').addEventListener('input',ev=>{
   n.label=ev.target.value;
@@ -3165,7 +3414,13 @@ body.querySelectorAll('#plist .dx[data-del-key]').forEach(btn=>{
   btn.addEventListener('click',()=>dProp(selId,btn.dataset.delKey||''));
 });
 body.querySelectorAll('.pk,.pv').forEach(inp=>inp.addEventListener('change',()=>saveState('속성(Key/Value) 변경')));
-body.querySelectorAll('.pk,.pv').forEach(inp=>inp.addEventListener('blur',()=>rebuildP(selId)));
+body.querySelectorAll('.pk,.pv').forEach(inp=>inp.addEventListener('blur',()=>{
+  rebuildP(selId);
+  // CD 노드는 속성 변경 시 SVG를 다시 그려야 함
+  if(nodes[selId] && nodes[selId].type.startsWith('cd')){
+    renderNode(selId); redrawEdges(); selItem(selId);
+  }
+}));
   // 새로 생성된 버튼들에 툴팁을 적용
   if(typeof refreshTooltips === 'function') refreshTooltips();
 }
@@ -3174,8 +3429,8 @@ const rows=document.querySelectorAll('#plist .pr');const p={};
 rows.forEach(r=>{const k=r.querySelector('.pk').value.trim(),v=r.querySelector('.pv').value.trim();if(k)p[k]=v;});
 nodes[nid].properties=p;
 }
-function aProp(nid){if(!nodes[nid])return;nodes[nid].properties['prop_'+Object.keys(nodes[nid].properties).length]='';updateInspector();saveState();}
-function dProp(nid,k){delete nodes[nid].properties[k];updateInspector();saveState();}
+function aProp(nid){if(!nodes[nid])return;nodes[nid].properties['prop_'+Object.keys(nodes[nid].properties).length]='';if(nodes[nid].type.startsWith('cd')){renderNode(nid);redrawEdges();}updateInspector();saveState();}
+function dProp(nid,k){delete nodes[nid].properties[k];if(nodes[nid].type.startsWith('cd')){renderNode(nid);redrawEdges();}updateInspector();saveState();}
 function resetEdgeCurve(eid){
 if(!edges[eid])return;
 edges[eid].cp1dx=0;edges[eid].cp1dy=0;edges[eid].cp2dx=0;edges[eid].cp2dy=0;
@@ -3224,9 +3479,10 @@ function updateStatus(){
 }
 function setMode(m){
   mode=m;
-  ['fc','fsm','bt','sc'].forEach(k=>{
-    document.getElementById('tab-'+k).classList.toggle('on',k===m);
-    document.getElementById('p'+k).style.display=k===m?'':'none';
+  ['fc','fsm','bt','sc','cd'].forEach(k=>{
+    document.getElementById('tab-'+k)?.classList.toggle('on',k===m);
+    const p = document.getElementById('p'+k);
+    if(p) p.style.display=k===m?'':'none';
   });
 }
 
@@ -3274,7 +3530,8 @@ function getData(){
       cp1dy:e.cp1dy || 0,
       cp2dx:e.cp2dx || 0,
       cp2dy:e.cp2dy || 0,
-      manualPts:e.manualPts || null
+      manualPts:e.manualPts || null,
+      relation:e.relation || ''
     }))
   };
 }
@@ -3343,6 +3600,7 @@ function doImp(){
           if(e.lineStyle) edges[eid].lineStyle = e.lineStyle;
           if(e.color) edges[eid].color = e.color;
           if(e.txtColor) edges[eid].txtColor = e.txtColor;
+          if(e.relation) edges[eid].relation = e.relation;
           if(e.manualPts) edges[eid].manualPts = e.manualPts;
           renderEdge(eid);
         }
@@ -3664,6 +3922,44 @@ function buildDemoGraph(modeKey){
     [e1,e2,e3,e4,e5].forEach(eid=>setEdgeStyle(eid,'straight'));
     return 'SequenceChart_Demo';
   }
+  if(modeKey==='cd'){
+    try{
+    const n3=createNode('cdclass', 300, 50, null, 'Person', {
+      cd_attributes: '+ id: int\n+ name: string\n+ email: string',
+      cd_methods: '+ toString(): string\n+ equals(o): bool'
+    });
+    const n1=createNode('cdclass', 80, 280, null, 'User', {
+      cd_attributes: '+ habits: list\n+ habitNum: int\n+ coach: Coach',
+      cd_methods: '+ newUser(s): int\n+ displayHabits(): list'
+    });
+    const n2=createNode('cdclass', 530, 280, null, 'Coach', {
+      cd_attributes: '+ users: list\n+ rating: float',
+      cd_methods: '+ newCoach(s): int\n+ addUser(id): bool\n+ deleteUser(id): bool'
+    });
+    const n4=createNode('cdinterface', 830, 50, null, 'Serializable', {
+      cd_attributes: '',
+      cd_methods: '+ serialize(): string\n+ deserialize(s): void'
+    });
+    const n5=createNode('cdenum', 830, 280, null, 'UserRole', {
+      cd_attributes: 'ADMIN\nMODERATOR\nUSER\nGUEST',
+      cd_methods: ''
+    });
+
+    if(n1&&n2&&n3&&n4&&n5){
+      // Inheritance: User → Person, Coach → Person
+      const e1=createEdge(n1,n3,'t','b',null,'',''); // User inherits Person
+      const e2=createEdge(n2,n3,'t','b',null,'',''); // Coach inherits Person
+      const e3=createEdge(n1,n4,'r','b',null,'',''); // User implements Serializable
+      const e4=createEdge(n1,n2,'r','l',null,'coach',''); // User aggregates Coach
+      if(e1){ edges[e1].relation='inherit'; setEdgeStyle(e1,'straight'); renderEdge(e1); }
+      if(e2){ edges[e2].relation='inherit'; setEdgeStyle(e2,'straight'); renderEdge(e2); }
+      if(e3){ edges[e3].relation='implement'; setEdgeStyle(e3,'straight'); renderEdge(e3); }
+      if(e4){ edges[e4].relation='aggregate'; setEdgeStyle(e4,'straight'); renderEdge(e4); }
+    }
+    [n1,n2,n3,n4,n5].filter(Boolean).forEach(id=>renderNode(id));
+    }catch(err){console.error('CD demo error:', err);}
+    return 'ClassDiagram_Demo';
+  }
   // default: flowchart
   const n1=createNode('terminal',  60,200,null,'Game Start');
   const n2=createNode('screen',   270,120,null,'메인 로비',   {ui_id:'UI_LOBBY_001'});
@@ -3688,10 +3984,11 @@ function spawnModeDemo(targetMode){
   const m=targetMode||mode;
   const defaults={
     fc:'Shop_UI_Flow', fsm:'FSM_Demo',
-    bt:'BehaviorTree_Demo', sc:'SequenceChart_Demo'
+    bt:'BehaviorTree_Demo', sc:'SequenceChart_Demo',
+    cd:'ClassDiagram_Demo'
   };
   const projectName=defaults[m]||'Demo';
-  const lineStyle=(m==='sc')?'straight':'step';
+  const lineStyle=(m==='sc'||m==='cd')?'straight':'step';
   const snap={
     project: projectName, mode:m, lineStyle,
     vx:80, vy:60, vs:1, nc:0, ec:0,
