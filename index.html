@@ -3,41 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <title>Game Flow Canvas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/variable/pretendardvariable.css" />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
 
 <div id="hdr">
-  <div class="logo">Game Flow <span>Canvas</span></div>
-  <div class="hsep"></div>
-  <button class="mtab on" id="tab-fc"  onclick="setMode('fc')">플로우차트</button>
-  <button class="mtab"    id="tab-fsm" onclick="setMode('fsm')">FSM</button>
-  <button class="mtab"    id="tab-bt"  onclick="setMode('bt')">비헤이비어 트리</button>
-  <button class="mtab"    id="tab-sc"  onclick="setMode('sc')">시퀀스 차트</button>
-  <button class="hbtn" onclick="spawnModeDemo()" title="현재 탭의 예시를 새 시트로 생성">예시 생성</button>
-  <div class="hsep"></div>
-  <input class="pname" id="pname" value="Untitled_Flow">
-  
-  <div class="hsp"></div>
-  
-  <!-- 필수 기능만 상단 유지 -->
-  <!-- 아이콘만 표시하고 설명은 title(data-tip)에서 제공 -->
-  <button class="hbtn" onclick="openHistory()" title="작업 내역 보기">📜</button>
-  <button class="hbtn" onclick="validateFlow()" title="검증 (사이클·무한루프 포함)" data-tip="플로우 검증" data-tip-sub="고립·무한루프·단방향 막힘 등 검사">⚠</button>
-  <button class="hbtn" onclick="openCodeReview()" title="코드 리뷰" data-tip="코드 리뷰" data-tip-sub="플로우를 의사코드(pseudocode)로 변환">📋</button>
-  <button class="hbtn" onclick="openLogicTrace()" title="로직 트레이스" data-tip="로직 트레이스" data-tip-sub="조건값을 설정하고 플로우를 단계별 시뮬레이션">▶</button>
-  <button class="hbtn" onclick="openShortcutSettings()" title="단축키 설정" data-tip="단축키 설정" data-tip-sub="키보드 단축키를 커스터마이징합니다">⌨</button>
-  <button class="hbtn" onclick="captureFlow()" title="캡처">📷</button>
-  <button class="hbtn r" onclick="clearCanvas()" title="캔버스 초기화">✕</button>
-  <button class="hbtn" onclick="openImport()" title="가져오기">📂</button>
-  <button class="hbtn g" onclick="exportJSON()" title="내보내기">💾</button>
+  <div class="hdr-top">
+    <div class="hdr-brand">
+      <div class="logo">Game Flow <span>Canvas</span></div>
+      <div class="hsep"></div>
+    </div>
+    <div class="mode-group">
+      <button class="mtab on" id="tab-fc"  onclick="setMode('fc')">플로우차트</button>
+      <button class="mtab"    id="tab-fsm" onclick="setMode('fsm')">FSM</button>
+      <button class="mtab"    id="tab-bt"  onclick="setMode('bt')">비헤이비어 트리</button>
+      <button class="mtab"    id="tab-sc"  onclick="setMode('sc')">시퀀스 차트</button>
+    </div>
+    <div class="hdr-project">
+      <input class="pname" id="pname" value="Untitled_Flow">
+    </div>
+  </div>
+
+  <div class="hdr-bottom">
+    <div class="tool-group tool-group-primary">
+      <button class="hbtn tool-btn" onclick="openHistory()" title="작업 내역 보기">작업 내역</button>
+      <button class="hbtn tool-btn" onclick="validateFlow()" title="검증 (사이클·무한루프 포함)" data-tip="플로우 검증" data-tip-sub="고립·무한루프·단방향 막힘 등 검사">검증</button>
+      <button class="hbtn tool-btn" onclick="openCodeReview()" title="코드 리뷰" data-tip="코드 리뷰" data-tip-sub="플로우를 의사코드(pseudocode)로 변환">의사코드</button>
+      <button class="hbtn tool-btn" onclick="openLogicTrace()" title="로직 트레이스" data-tip="로직 트레이스" data-tip-sub="조건값을 설정하고 플로우를 단계별 시뮬레이션">로직 트레이스</button>
+    </div>
+    <div class="tool-group tool-group-minor">
+      <button class="hbtn tool-btn subtle" onclick="spawnModeDemo()" title="현재 탭의 예시를 새 시트로 생성">예시 생성</button>
+      <button class="hbtn tool-btn subtle" onclick="document.getElementById('m-help').style.display='flex'" title="도움말">도움말</button>
+      <button class="hbtn tool-btn subtle" onclick="openShortcutSettings()" title="단축키 설정">단축키</button>
+      <button class="hbtn tool-btn subtle" onclick="captureFlow()" title="캡처">캡처</button>
+      <button class="hbtn tool-btn subtle" onclick="openImport()" title="가져오기">가져오기</button>
+    </div>
+    <div class="tool-group tool-group-actions">
+      <button class="hbtn tool-btn subtle g" onclick="exportJSON()" title="내보내기">내보내기</button>
+      <button class="hbtn tool-btn subtle r" onclick="clearCanvas()" title="캔버스 초기화">초기화</button>
+    </div>
+  </div>
 </div>
 
 <div id="main">
   <!-- ══════════ PALETTE ══════════ -->
   <div id="pal">
+    <div id="pal-guide"></div>
     <div style="flex:1; overflow-y:auto;">
       <!-- FC -->
       <div id="pfc">

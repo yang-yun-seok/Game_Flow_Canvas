@@ -2,11 +2,146 @@
 // DEMO
 // ══════════════════════════════════════════════════
 const QUICKSTART_META = {
-  fc:{kicker:'Flowchart',title:'기본 흐름부터 바로 그리기',desc:'화면 이동, 조건 분기, 팝업 흐름처럼 게임 UX 플로우를 빠르게 잡는 모드입니다.',starter:'기본 뼈대 만들기',tip:'추천 시작점: Start → Screen → Decision'},
-  fsm:{kicker:'State Machine',title:'상태 전이 구조부터 잡기',desc:'캐릭터 상태, AI 전이, UI 상태 전환처럼 상태 중심 설계에 적합합니다.',starter:'상태 뼈대 만들기',tip:'추천 시작점: Initial → Idle → Choice'},
-  bt:{kicker:'Behavior Tree',title:'AI 행동 트리부터 시작하기',desc:'Selector, Sequence, Condition, Action 순으로 묶어가며 AI 의사결정 흐름을 설계합니다.',starter:'AI 뼈대 만들기',tip:'추천 시작점: Root → Sequence → Condition/Action'},
-  sc:{kicker:'Sequence Chart',title:'객체 간 상호작용부터 정리하기',desc:'플레이어, NPC, 서버 사이 메시지 교환을 시간 순서대로 정리할 때 적합합니다.',starter:'메시지 뼈대 만들기',tip:'추천 시작점: Actor 2개 → Message 1개'},
+  fc:{
+    kicker:'FLOW SYSTEM',
+    title:'Map Player Flow Fast',
+    desc:'화면 이동, 조건 분기, 팝업 흐름처럼 플레이어 여정을 빠르게 구조화합니다.',
+    starter:'기본 플로우 시작',
+    tip:'추천 시작점: Start → Screen → Decision',
+    block:'lime',
+    note:'기획 흐름이 길어질수록 먼저 큰 분기만 잡고 세부 노드를 채우는 편이 안정적입니다.'
+  },
+  fsm:{
+    kicker:'STATE LOGIC',
+    title:'Design Clear Transitions',
+    desc:'캐릭터 상태, UI 상태, AI 전이를 상태 단위로 분해해서 전환 규칙을 정리합니다.',
+    starter:'상태 뼈대 만들기',
+    tip:'추천 시작점: Initial → Idle → Choice',
+    block:'lilac',
+    note:'상태명은 짧게, 전이 조건은 엣지 라벨로 분리하면 읽기가 좋아집니다.'
+  },
+  bt:{
+    kicker:'AI BEHAVIOR',
+    title:'Compose Decision Trees',
+    desc:'Selector, Sequence, Condition, Action 순서로 AI 판단 구조를 계층적으로 설계합니다.',
+    starter:'AI 트리 시작',
+    tip:'추천 시작점: Root → Sequence → Condition / Action',
+    block:'coral',
+    note:'액션보다 상위 분기 규칙을 먼저 정리하면 검증과 트레이스가 쉬워집니다.'
+  },
+  sc:{
+    kicker:'MESSAGE FLOW',
+    title:'Trace Object Messages',
+    desc:'플레이어, NPC, 서버 간 메시지와 응답을 시간 순서대로 시각화합니다.',
+    starter:'시퀀스 골격 만들기',
+    tip:'추천 시작점: Actor 2개 + Message 1개',
+    block:'navy',
+    note:'메시지 라벨은 요청과 응답을 분리해서 적으면 흐름 해석이 빨라집니다.'
+  },
 };
+const PALETTE_GUIDE_META = {
+  fc:{
+    title:'처음이면 이 셋부터',
+    desc:'Start, Screen, Decision만으로도 대부분의 UX 플로우를 시작할 수 있습니다.',
+    picks:[['terminal','Start'],['screen','Screen'],['decision','Decision']]
+  },
+  fsm:{
+    title:'상태 전이는 이 순서',
+    desc:'Initial, State, Choice로 최소 상태 머신 골격을 먼저 잡습니다.',
+    picks:[['initial','Initial'],['state','State'],['fsmchoice','Choice']]
+  },
+  bt:{
+    title:'AI 트리는 이 조합',
+    desc:'Root, Sequence, Action을 먼저 놓고 조건은 그다음에 붙이는 편이 쉽습니다.',
+    picks:[['btroot','Root'],['btseq','Sequence'],['btleaf','Action']]
+  },
+  sc:{
+    title:'메시지 흐름 시작점',
+    desc:'Actor 둘과 Message 하나로 상호작용 시간축을 빠르게 세울 수 있습니다.',
+    picks:[['sclife',':Actor'],['sclife',':System'],['scmsg','message()']]
+  }
+};
+const HELP_SEEN_KEY = 'gfc_help_seen_v1';
+const paletteCollapseState = {};
+function shouldOpenPaletteSection(modeKey, index, title){
+  if(index===0) return true;
+  const normalized=String(title||'').toLowerCase();
+  if(modeKey==='fc' && /게임 ui|모듈/.test(normalized)) return true;
+  if(modeKey==='fsm' && /기본 상태/.test(normalized)) return true;
+  if(modeKey==='bt' && /리프 노드/.test(normalized)) return true;
+  if(modeKey==='sc' && /메시지/.test(normalized)) return true;
+  return false;
+}
+function enhancePalettePanel(panelId, modeKey){
+  const panel=document.getElementById(panelId);
+  if(!panel || panel.dataset.enhanced==='1') return;
+  const items=[...panel.children];
+  panel.innerHTML='';
+  let currentTitle='';
+  let currentNodes=[];
+  let sectionIndex=0;
+
+  function flushSection(){
+    if(!currentTitle || !currentNodes.length) return;
+    const secKey=`${modeKey}:${currentTitle}`;
+    if(!(secKey in paletteCollapseState)){
+      paletteCollapseState[secKey]=shouldOpenPaletteSection(modeKey, sectionIndex, currentTitle);
+    }
+    const section=document.createElement('section');
+    section.className='pal-section';
+    section.dataset.sectionKey=secKey;
+    section.classList.toggle('collapsed', !paletteCollapseState[secKey]);
+
+    const toggle=document.createElement('button');
+    toggle.type='button';
+    toggle.className='pal-section-toggle';
+    toggle.innerHTML=`<span class="pal-section-title">${currentTitle}</span><span class="pal-section-arrow">${paletteCollapseState[secKey] ? '−' : '+'}</span>`;
+    toggle.addEventListener('click', ()=>{
+      paletteCollapseState[secKey]=!paletteCollapseState[secKey];
+      section.classList.toggle('collapsed', !paletteCollapseState[secKey]);
+      toggle.querySelector('.pal-section-arrow').textContent=paletteCollapseState[secKey] ? '−' : '+';
+    });
+
+    const body=document.createElement('div');
+    body.className='pal-section-body';
+    currentNodes.forEach(node=>body.appendChild(node));
+
+    section.appendChild(toggle);
+    section.appendChild(body);
+    panel.appendChild(section);
+    currentTitle='';
+    currentNodes=[];
+    sectionIndex+=1;
+  }
+
+  items.forEach(node=>{
+    if(node.classList.contains('ps')){
+      flushSection();
+      currentTitle=node.textContent.trim();
+      return;
+    }
+    if(node.classList.contains('psep')) return;
+    currentNodes.push(node);
+  });
+  flushSection();
+  panel.dataset.enhanced='1';
+}
+function setupPaletteSections(){
+  enhancePalettePanel('pfc','fc');
+  enhancePalettePanel('pfsm','fsm');
+  enhancePalettePanel('pbt','bt');
+  enhancePalettePanel('psc','sc');
+}
+function maybeShowWelcomeHelp(){
+  try{
+    if(localStorage.getItem(HELP_SEEN_KEY)) return;
+    localStorage.setItem(HELP_SEEN_KEY, '1');
+  }catch(_){}
+  setTimeout(()=>{
+    const modal=document.getElementById('m-help');
+    if(modal) modal.style.display='flex';
+  }, 320);
+}
 function getViewportCenterWorld(){
   const r=cvs.getBoundingClientRect();
   return spt(r.left+r.width*0.5, r.top+r.height*0.5);
@@ -18,6 +153,31 @@ function createQuickStartSingleNode(){
   createNode(type,center.x-75,center.y-28,null,label);
   saveState('퀵스타트: 시작 노드 추가');
   updateStatus();
+}
+function addSuggestedNode(type,label){
+  const center=getViewportCenterWorld();
+  const count=Object.keys(nodes).length;
+  const x=center.x-70+((count%3)-1)*150;
+  const y=center.y-26+Math.floor(count/3)*96;
+  createNode(type,x,y,null,label);
+  selItem('n'+nc);
+  saveState('추천 노드 추가');
+  updateStatus();
+}
+function renderPaletteGuide(){
+  const el=document.getElementById('pal-guide');
+  if(!el) return;
+  const meta=PALETTE_GUIDE_META[mode]||PALETTE_GUIDE_META.fc;
+  el.innerHTML=`
+    <div class="pal-guide-card">
+      <div class="pal-guide-kicker">QUICK PICKS</div>
+      <div class="pal-guide-title">${meta.title}</div>
+      <div class="pal-guide-desc">${meta.desc}</div>
+      <div class="pal-guide-actions">
+        ${meta.picks.map(([type,label])=>`<button class="pal-guide-chip" onclick="addSuggestedNode('${type}','${label.replace(/'/g,"\\'")}')">${label}</button>`).join('')}
+      </div>
+    </div>
+  `;
 }
 function createQuickStartStarter(){
   const center=getViewportCenterWorld();
@@ -62,22 +222,33 @@ function renderQuickStart(){
     return;
   }
   const meta=QUICKSTART_META[mode]||QUICKSTART_META.fc;
+  el.setAttribute('data-block', meta.block || 'lime');
+  const titleVariant=(meta.title||'').length > 20 ? 'long' : 'default';
   el.innerHTML=`
-    <div class="qs-kicker">Quick Start · ${meta.kicker}</div>
-    <div class="qs-title">${meta.title}</div>
-    <div class="qs-desc">${meta.desc}</div>
-    <div class="qs-steps">
-      <div class="qs-step"><div class="qs-step-no">1</div><div>왼쪽 팔레트에서 필요한 노드를 드래그해서 캔버스에 놓습니다.</div></div>
-      <div class="qs-step"><div class="qs-step-no">2</div><div>노드의 앵커를 클릭해서 선을 연결하고, Inspector에서 텍스트와 속성을 채웁니다.</div></div>
-      <div class="qs-step"><div class="qs-step-no">3</div><div>완성 후 검증, 코드 리뷰, 로직 트레이스로 구조를 확인합니다.</div></div>
+    <div class="qs-shell">
+      <div class="qs-brand-row">
+        <div class="qs-brand">Game Flow Canvas</div>
+        <div class="qs-kicker">${meta.kicker}</div>
+      </div>
+      <div class="qs-panel">
+        <div class="qs-copy">
+          <div class="qs-title qs-title-${titleVariant}">${meta.title}</div>
+          <div class="qs-desc">${meta.desc}</div>
+          <div class="qs-note">${meta.note}</div>
+        </div>
+        <div class="qs-steps">
+          <div class="qs-step"><div class="qs-step-no">01</div><div><strong>노드 배치</strong><span>왼쪽 팔레트에서 필요한 블록을 끌어다 놓고 큰 구조부터 잡습니다.</span></div></div>
+          <div class="qs-step"><div class="qs-step-no">02</div><div><strong>연결과 라벨</strong><span>앵커로 선을 잇고 Inspector에서 이름, 조건, 메모를 채웁니다.</span></div></div>
+          <div class="qs-step"><div class="qs-step-no">03</div><div><strong>검증과 추적</strong><span>검증, 코드 리뷰, 로직 트레이스로 막힌 분기와 흐름 누락을 확인합니다.</span></div></div>
+        </div>
+      </div>
+      <div class="qs-actions">
+        <button class="qs-btn qs-btn-primary" onclick="createQuickStartStarter()">${meta.starter}</button>
+        <button class="qs-btn qs-btn-secondary" onclick="spawnModeDemo()">예시 불러오기</button>
+        <button class="qs-btn qs-btn-secondary" onclick="document.getElementById('m-help').style.display='flex'">가이드 열기</button>
+      </div>
+      <div class="qs-tip">${meta.tip}</div>
     </div>
-    <div class="qs-actions">
-      <button class="qs-btn qs-btn-primary" onclick="createQuickStartStarter()">${meta.starter}</button>
-      <button class="qs-btn qs-btn-secondary" onclick="createQuickStartSingleNode()">노드 하나로 시작</button>
-      <button class="qs-btn qs-btn-secondary" onclick="spawnModeDemo()">예시 불러오기</button>
-      <button class="qs-btn qs-btn-secondary" onclick="document.getElementById('m-help').style.display='flex'">도움말 열기</button>
-    </div>
-    <div class="qs-tip">${meta.tip}</div>
   `;
   el.style.display='block';
 }
@@ -544,6 +715,7 @@ function onPnameInput(val){
     onPnameInput(e.target.value.trim());
   });
   applyVP();
+  setupPaletteSections();
   if(!restoreWorkspaceAutosave()){
     const firstId = newSheetId();
     sheets.push({ id: firstId, name: 'Shop_UI_Flow', data: null });
@@ -555,6 +727,7 @@ function onPnameInput(val){
   // 초기 렌더 후 툴팁 바인딩
   if(typeof refreshTooltips === 'function') refreshTooltips();
   fitAll();
+  maybeShowWelcomeHelp();
 })();
 
 

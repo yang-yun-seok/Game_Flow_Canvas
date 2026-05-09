@@ -411,13 +411,14 @@ function beginRenameNode(id){
 
 function validateFlow(){
   const issues=[];
+  const pushIssue=(issue)=>issues.push(issue);
   document.querySelectorAll('.ng.bad').forEach(el=>el.classList.remove('bad'));
   const startT={fc:['terminal'],fsm:['initial'],bt:['btroot'],sc:['sclife']}[mode]||['terminal'];
   const endT=Object.keys(S).filter(k=>S[k].end);
 
   // 시작 노드 존재 여부
   if(!Object.values(nodes).some(n=>startT.includes(n.type)))
-    issues.push({i:'⚠',t:'시작 노드 없음 ('+startT.join('/')+' 타입 필요)',sev:'warn'});
+    pushIssue({i:'⚠',t:'시작 노드 없음 ('+startT.join('/')+' 타입 필요)',sev:'warn'});
 
   // 인접 맵 선빌드: 노드마다 edges 전체 순회하는 O(N×M) 방지
   const outMap={}, incMap={};
@@ -433,14 +434,14 @@ function validateFlow(){
     const out=outMap[id]||[];
     const inc=incMap[id]||[];
     if(!out.length&&!inc.length){
-      issues.push({i:'🔴',t:`"${n.label||id}" (${id}): 고립된 노드`,sev:'error'});
+      pushIssue({i:'🔴',t:`"${n.label||id}" (${id}): 고립된 노드`,sev:'error',nodeId:id});
       document.getElementById('ng-'+id)?.classList.add('bad');
       return;
     }
     if(!out.length&&!endT.includes(n.type))
-      issues.push({i:'🟡',t:`"${n.label||id}" (${id}): 출구 없음 (막힌 경로)`,sev:'warn'});
+      pushIssue({i:'🟡',t:`"${n.label||id}" (${id}): 출구 없음 (막힌 경로)`,sev:'warn',nodeId:id});
     if(!inc.length&&!startT.includes(n.type))
-      issues.push({i:'🟡',t:`"${n.label||id}" (${id}): 진입 없음`,sev:'warn'});
+      pushIssue({i:'🟡',t:`"${n.label||id}" (${id}): 진입 없음`,sev:'warn',nodeId:id});
   });
 
   // ── 무한루프(사이클) 탐지 ──
@@ -453,10 +454,11 @@ function validateFlow(){
       });
       // 사이클에 포함된 노드를 bad로 표시
       c.path.forEach(id=>{ cycleNodeIds.add(id); document.getElementById('ng-'+id)?.classList.add('bad'); });
-      issues.push({
+      pushIssue({
         i:'🔁',
         t:`무한루프 감지 #${ci+1}: ${names.join(' → ')}`,
-        sev:'loop'
+        sev:'loop',
+        nodeId:c.path[0]
       });
     });
   }
@@ -479,16 +481,40 @@ function validateFlow(){
     if(counts.warn){  const s=document.createElement('span'); s.style.color='#ffcc44'; s.textContent=`🟡 경고 ${counts.warn}`; sumDiv.appendChild(s); }
     container.appendChild(sumDiv);
 
-    // 개별 이슈 (i.t는 n.label 포함 → textContent로 삽입)
-    issues.forEach(i=>{
-      const col=i.sev==='error'?'rgba(255,50,50,.07)':i.sev==='loop'?'rgba(255,100,0,.1)':'rgba(255,200,0,.06)';
-      const bc=i.sev==='error'?'rgba(255,50,50,.25)':i.sev==='loop'?'rgba(255,130,0,.3)':'rgba(255,200,0,.2)';
-      const row=document.createElement('div');
-      row.className='vi'; row.style.background=col; row.style.borderColor=bc;
-      const icon=document.createElement('div'); icon.textContent=i.i;
-      const txt=document.createElement('div'); txt.className='vt'; txt.textContent=i.t;
-      row.appendChild(icon); row.appendChild(txt);
-      container.appendChild(row);
+    const groups=[
+      {key:'error', label:'오류', icon:'🔴'},
+      {key:'loop', label:'무한루프', icon:'🔁'},
+      {key:'warn', label:'경고', icon:'🟡'}
+    ];
+    groups.forEach(group=>{
+      const items=issues.filter(issue=>issue.sev===group.key);
+      if(!items.length) return;
+      const block=document.createElement('section');
+      block.className='val-group';
+      const hdr=document.createElement('div');
+      hdr.className='val-group-hdr';
+      hdr.textContent=`${group.icon} ${group.label} ${items.length}`;
+      block.appendChild(hdr);
+
+      items.forEach(i=>{
+        const col=i.sev==='error'?'rgba(255,50,50,.07)':i.sev==='loop'?'rgba(255,100,0,.1)':'rgba(255,200,0,.06)';
+        const bc=i.sev==='error'?'rgba(255,50,50,.25)':i.sev==='loop'?'rgba(255,130,0,.3)':'rgba(255,200,0,.2)';
+        const row=document.createElement('div');
+        row.className='vi'; row.style.background=col; row.style.borderColor=bc;
+        if(i.nodeId && nodes[i.nodeId]){
+          row.classList.add('vi-clickable');
+          row.title='클릭하면 해당 노드로 이동합니다';
+          row.addEventListener('click', ()=>{
+            cm('m-val');
+            focusNodeInView(i.nodeId);
+          });
+        }
+        const icon=document.createElement('div'); icon.textContent=i.i;
+        const txt=document.createElement('div'); txt.className='vt'; txt.textContent=i.t;
+        row.appendChild(icon); row.appendChild(txt);
+        block.appendChild(row);
+      });
+      container.appendChild(block);
     });
   }
   document.getElementById('m-val').style.display='flex';

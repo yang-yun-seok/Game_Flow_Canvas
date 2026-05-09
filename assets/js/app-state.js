@@ -94,6 +94,22 @@ function syncThemeUI(){
   const btn = document.getElementById('thbtn');
   if(btn) btn.textContent = lightMode ? '☀️' : '🌙';
 }
+function focusNodeInView(id, options){
+  const opts=options||{};
+  const n=nodes[id];
+  if(!n) return false;
+  clearSel();
+  selItem(id);
+  const r=msvg.getBoundingClientRect();
+  const targetScale=opts.keepZoom ? vs : Math.max(vs, 1);
+  const cx=n.x + nW(n)/2;
+  const cy=n.y + nH(n)/2;
+  vs=targetScale;
+  vx=r.width*0.5 - cx*vs;
+  vy=r.height*0.5 - cy*vs;
+  applyVP();
+  return true;
+}
 function getWorkspaceAutosavePayload(){
   if(typeof snapshotCurrent !== 'function' || !Array.isArray(sheets) || !sheets.length) return null;
   const currentSnap = jClone(snapshotCurrent());
