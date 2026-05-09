@@ -9,6 +9,7 @@ Game flow diagram editor for beginner-friendly game design work.
 - JSON import/export and PNG/SVG capture
 - Validation, pseudocode review, and logic trace tools
 - Local autosave and session restore in the browser
+- Empty-canvas quick start panel with mode-specific starter actions
 
 ## Structure
 
