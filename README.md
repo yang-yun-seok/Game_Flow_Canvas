@@ -2,6 +2,14 @@
 
 Game flow diagram editor for beginner-friendly game design work.
 
+## Current Features
+
+- Multi-sheet canvas editing
+- Flowchart, FSM, Behavior Tree, and Sequence Chart modes
+- JSON import/export and PNG/SVG capture
+- Validation, pseudocode review, and logic trace tools
+- Local autosave and session restore in the browser
+
 ## Structure
 
 - `index.html`: document markup and UI layout

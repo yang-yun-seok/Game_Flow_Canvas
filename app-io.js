@@ -113,6 +113,8 @@ function doImp(){
           renderEdge(eid);
         }
       });
+      saveState('가져오기 완료');
+      scheduleWorkspaceAutosave();
       cm('m-imp');
     }));
   }catch(err){showAlert('JSON 파싱 오류: '+err.message);}
