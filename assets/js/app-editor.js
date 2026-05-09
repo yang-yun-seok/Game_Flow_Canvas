@@ -1080,6 +1080,7 @@ function updateStatus(){
   const sts=document.getElementById('sts');
   if(sts) sts.textContent=nodeCount ? (edgeCount ? '구조 편집 중' : '노드 배치 중') : '왼쪽 팔레트 또는 퀵스타트로 시작';
   if(typeof renderQuickStart === 'function') renderQuickStart();
+  if(typeof renderPaletteGuide === 'function') renderPaletteGuide();
 }
 function setMode(m){
   mode=m;
@@ -1088,6 +1089,7 @@ function setMode(m){
     document.getElementById('p'+k).style.display=k===m?'':'none';
   });
   if(typeof renderQuickStart === 'function') renderQuickStart();
+  if(typeof renderPaletteGuide === 'function') renderPaletteGuide();
 }
 
 // ══════════════════════════════════════════════════

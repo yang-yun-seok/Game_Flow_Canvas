@@ -275,6 +275,113 @@ function resolveVars(str){
     return v||'#888';
   });
 }
+function parseColorToRgb(input){
+  const value=String(input||'').trim();
+  let m=value.match(/^#([0-9a-f]{6})$/i);
+  if(m){
+    const hex=m[1];
+    return {
+      r:parseInt(hex.slice(0,2),16),
+      g:parseInt(hex.slice(2,4),16),
+      b:parseInt(hex.slice(4,6),16)
+    };
+  }
+  m=value.match(/^rgb\(\s*([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)\s*\)$/i);
+  if(m){
+    return {r:+m[1], g:+m[2], b:+m[3]};
+  }
+  m=value.match(/^rgba\(\s*([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)\s*\)$/i);
+  if(m){
+    return {r:+m[1], g:+m[2], b:+m[3]};
+  }
+  return {r:17,g:17,b:17};
+}
+function relativeLuminance({r,g,b}){
+  const norm=[r,g,b].map(v=>{
+    const x=v/255;
+    return x<=0.03928 ? x/12.92 : Math.pow((x+0.055)/1.055, 2.4);
+  });
+  return 0.2126*norm[0] + 0.7152*norm[1] + 0.0722*norm[2];
+}
+function pickNodeTextColors(fillCol){
+  const resolved=resolveVars(fillCol);
+  const lum=relativeLuminance(parseColorToRgb(resolved));
+  const dark=lum > 0.44;
+  return {
+    main: dark ? '#111111' : '#ffffff',
+    sub: dark ? 'rgba(17,17,17,0.64)' : 'rgba(255,255,255,0.72)',
+    badgeBg: dark ? 'rgba(255,255,255,0.46)' : 'rgba(255,255,255,0.12)',
+    badgeStroke: dark ? 'rgba(17,17,17,0.10)' : 'rgba(255,255,255,0.18)'
+  };
+}
+function truncateTextToWidth(text, width, pxPerChar){
+  const raw=String(text||'');
+  const limit=Math.max(3, Math.floor(width/Math.max(4, pxPerChar)));
+  if(raw.length<=limit) return raw;
+  return raw.slice(0, Math.max(1, limit-1)) + '…';
+}
+function rectsOverlap(a,b,pad){
+  const p=pad||0;
+  return !(
+    a.x + a.w + p < b.x ||
+    b.x + b.w + p < a.x ||
+    a.y + a.h + p < b.y ||
+    b.y + b.h + p < a.y
+  );
+}
+function edgeLabelOverlapsNode(box, skipIds){
+  const skip=new Set(skipIds||[]);
+  return Object.values(nodes).some(n=>{
+    if(skip.has(n.id)) return false;
+    return rectsOverlap(box, {x:n.x, y:n.y, w:nW(n), h:nH(n)}, 6);
+  });
+}
+function pickEdgeLabelAnchor(ls, from, to, cp1, cp2, pts){
+  if(ls === 'straight'){
+    const dx=to.x-from.x, dy=to.y-from.y;
+    const len=Math.hypot(dx,dy);
+    if(len < 70) return null;
+    const nx = len ? -dy/len : 0;
+    const ny = len ? dx/len : -1;
+    return {
+      x:(from.x+to.x)/2 + nx*16,
+      y:(from.y+to.y)/2 + ny*16,
+      len
+    };
+  }
+  if(ls === 'step' && pts && pts.length >= 2){
+    let best=null;
+    for(let i=0;i<pts.length-1;i++){
+      const [ax,ay]=pts[i], [bx,by]=pts[i+1];
+      const len=Math.hypot(bx-ax, by-ay);
+      if(len < 54) continue;
+      const horizontal=Math.abs(ay-by) < 0.5;
+      const vertical=Math.abs(ax-bx) < 0.5;
+      if(!horizontal && !vertical) continue;
+      const offset=horizontal ? {x:0,y:-16} : {x:16,y:0};
+      const cand={x:(ax+bx)/2 + offset.x, y:(ay+by)/2 + offset.y, len};
+      if(!best || len > best.len) best=cand;
+    }
+    return best;
+  }
+  if(ls === 'step'){
+    const dx=cp2.x-cp1.x, dy=cp2.y-cp1.y;
+    const len=Math.hypot(dx,dy);
+    if(len < 54) return null;
+    const horizontal=Math.abs(dy) < Math.abs(dx);
+    return {
+      x:(cp1.x+cp2.x)/2 + (horizontal ? 0 : 16),
+      y:(cp1.y+cp2.y)/2 + (horizontal ? -16 : 0),
+      len
+    };
+  }
+  const t=0.5;
+  return {
+    x:bpt(from.x, cp1.x, cp2.x, to.x, t),
+    y:bpt(from.y, cp1.y, cp2.y, to.y, t) - 16,
+    len:Math.hypot(to.x-from.x, to.y-from.y)
+  };
+}
 
 // ══════════════════════════════════════════════════
 // RENDER NODE
@@ -289,6 +396,11 @@ function renderNode(id){
   const sg=mk('g'); sg.classList.add('nsh'); sg.style.color=`var(${s.t})`;
   // Use custom node fill colour if provided, otherwise fall back to the theme colour for this node type
   const fillCol = n.color ? n.color : `var(${s.c})`;
+  const ink = pickNodeTextColors(fillCol);
+  const minDim=Math.min(W,H);
+  const hasTypeBadge=n.type!=='scfrag' && W>=92 && H>=62;
+  const hasIdLine=n.type!=='scfrag' && W>=74 && H>=46;
+  const labelSize=Math.max(11, Math.min(18, Math.round(minDim*0.28)));
   sg.innerHTML=`<g fill="${fillCol}" stroke="var(${s.b})" stroke-width="1.7">${s.draw(W,H)}</g>`;
   g.appendChild(sg);
 
@@ -299,32 +411,44 @@ function renderNode(id){
     g.appendChild(ll);
   }
 
-  // 노드 상단 내부에 노드 분류(타입) 뱃지 텍스트 표시
-  if(n.type !== 'scfrag') {
+  // 큰 노드에서만 상단 타입 힌트를 보여준다. 작은 노드는 메인 레이블만 남긴다.
+  if(hasTypeBadge) {
+    const badgeBg=mk('rect');
+    badgeBg.setAttribute('x',Math.max(8, W/2-32));
+    badgeBg.setAttribute('y',8);
+    badgeBg.setAttribute('width',Math.min(64, W-16));
+    badgeBg.setAttribute('height',18);
+    badgeBg.setAttribute('rx',9);
+    badgeBg.style.fill=ink.badgeBg;
+    badgeBg.style.stroke=ink.badgeStroke;
+    badgeBg.style.strokeWidth='1';
+    g.appendChild(badgeBg);
     const typetx = mk('text');
     typetx.classList.add('ntype');
     typetx.setAttribute('x', W/2); 
-    typetx.setAttribute('y', 14); // 노드 상단 내부
-    typetx.style.fill = `var(${s.t})`; // 노드 고유 강조색과 동일하게 매칭
-    typetx.style.opacity = '0.75';
-    typetx.style.letterSpacing = '1px';
-    typetx.style.fontSize = '8.5px';
-    typetx.textContent = `[ ${s.label} ]`; // 괄호로 감싸 뱃지 형태 강조
+    typetx.setAttribute('y', 18);
+    typetx.style.fill = ink.sub;
+    typetx.style.letterSpacing = '0.08em';
+    typetx.style.fontSize = '8px';
+    typetx.textContent = s.label;
     g.appendChild(typetx);
   }
 
   const hasLabel = !!n.label && n.type !== 'scfrag';
-  // 타입 뱃지가 들어왔으므로 메인 라벨은 살짝 아래로(4px), ID는 더 아래로(18px) 밀어내서 균형 조정
-  const yOffsetMain = hasLabel ? 4 : 0;
-  const yOffsetSub = hasLabel ? 18 : 12;
+  const labelY = hasTypeBadge ? H*0.5 + 5 : H*0.52;
+  const idY = Math.min(H-10, labelY + Math.max(12, labelSize*0.95));
 
   if(n.label){
     const tx=mk('text'); tx.classList.add('ntx');
+    const displayLabel=n.type==='scfrag'
+      ? n.label
+      : truncateTextToWidth(n.label, W-18, labelSize*0.58);
     tx.setAttribute('x',W/2); 
-    tx.setAttribute('y',H*(s.tyRatio||0.5) + (n.type==='scfrag'?0:yOffsetMain));
-    // 텍스트 가시성을 높이기 위해 노드 지정 색상 또는 전역 변수(--tx) 사용
-    tx.style.fill = n.txtColor ? n.txtColor : 'var(--tx)';
-    tx.textContent=n.label;
+    tx.setAttribute('y',n.type==='scfrag' ? H*(s.tyRatio||0.5) : labelY);
+    tx.style.fill = n.txtColor ? n.txtColor : ink.main;
+    tx.style.fontSize = `${labelSize}px`;
+    tx.style.fontWeight = minDim < 58 ? '700' : '600';
+    tx.textContent=displayLabel;
     g.appendChild(tx);
     if(n.type==='scfrag'){
       tx.setAttribute('x',14); tx.setAttribute('y',7);
@@ -332,11 +456,15 @@ function renderNode(id){
     }
   }
 
-  const sub=mk('text'); sub.classList.add('nid');
-  sub.setAttribute('x',W/2); 
-  sub.setAttribute('y',H*(s.tyRatio||0.5) + yOffsetSub);
-  sub.style.fill=`var(${s.t})`; sub.textContent=id;
-  g.appendChild(sub);
+  if(hasIdLine){
+    const sub=mk('text'); sub.classList.add('nid');
+    sub.setAttribute('x',W/2); 
+    sub.setAttribute('y',idY);
+    sub.style.fill=ink.sub;
+    sub.style.fontSize=`${Math.max(8, Math.min(10, labelSize-4))}px`;
+    sub.textContent=id;
+    g.appendChild(sub);
+  }
 
   getAnchors(n).forEach(a=>{
     const c=mk('circle'); c.classList.add('an');
@@ -1292,33 +1420,15 @@ function renderEdge(id){
   // keywords to aid quick understanding.
   document.getElementById('lbl-'+id)?.remove();
   if(e.label || e.name){
-    let bx, by;
-    if(ls === 'straight') {
-      bx = (from.x + to.x) / 2;
-      by = (from.y + to.y) / 2;
-    } else if(hasAutoRoute) {
-      const mid = Math.floor(pts.length / 2);
-      if(pts.length >= 2 && pts[mid-1] && pts[mid]){
-        bx = (pts[mid-1][0] + pts[mid][0]) / 2;
-        by = (pts[mid-1][1] + pts[mid][1]) / 2;
-      } else {
-        bx = (from.x + to.x) / 2;
-        by = (from.y + to.y) / 2;
-      }
-    } else if(ls === 'step') {
-      bx = (cp1.x + cp2.x) / 2;
-      by = (cp1.y + cp2.y) / 2;
-    } else {
-      const t = 0.5;
-      bx = bpt(from.x, cp1.x, cp2.x, to.x, t);
-      by = bpt(from.y, cp1.y, cp2.y, to.y, t);
-    }
+    const anchor=pickEdgeLabelAnchor(ls, from, to, cp1, cp2, hasAutoRoute?pts:null);
+    if(!anchor){ EL.appendChild(g); return; }
+    const bx=anchor.x, by=anchor.y;
 
     const lines = [];
     // Determine a text colour: if the user specified a custom text colour for the edge, use that for all lines
     // Otherwise, colour-code common "Yes"/"No" labels and use theme defaults
     const customTxt = e.txtColor || null;
-    if(e.name) lines.push({ txt: e.name, col: customTxt || 'var(--tx)', sz: 10, fw: '600' });
+    if(e.name) lines.push({ txt: truncateTextToWidth(e.name, 120, 6.4), col: customTxt || 'var(--tx)', sz: 10, fw: '600' });
     if(e.label) {
       const raw = e.label.trim();
       let col;
@@ -1330,21 +1440,23 @@ function renderEdge(id){
         if(/yes|예|성공/.test(low)) col = '#10b981';
         else if(/no|아니|없|실패/.test(low)) col = '#ef4444';
       }
-      lines.push({ txt: e.label, col, sz: 9.5, fw: '400' });
+      lines.push({ txt: truncateTextToWidth(e.label, 132, 6.1), col, sz: 9.5, fw: '400' });
     }
     const lh = 14;
     const maxW = Math.max(28, ...lines.map(l => l.txt.length * 6.2 + 14));
     const th = lines.length * lh + 5;
+    const labelBox={x:bx-maxW/2, y:by-th/2, w:maxW, h:th};
+    if(edgeLabelOverlapsNode(labelBox, [e.from, e.to])){ EL.appendChild(g); return; }
     const lg = mk('g');
     lg.id = 'lbl-' + id;
     lg.setAttribute('pointer-events', 'none');
     const bg = mk('rect');
     bg.classList.add('elb');
-    bg.setAttribute('x', bx - maxW / 2);
-    bg.setAttribute('y', by - th / 2);
+    bg.setAttribute('x', labelBox.x);
+    bg.setAttribute('y', labelBox.y);
     bg.setAttribute('width', maxW);
     bg.setAttribute('height', th);
-    bg.setAttribute('rx', 4);
+    bg.setAttribute('rx', 10);
     lg.appendChild(bg);
     lines.forEach((l, i) => {
       const lt = mk('text');
