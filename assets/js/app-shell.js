@@ -1,6 +1,86 @@
 ﻿// ══════════════════════════════════════════════════
 // DEMO
 // ══════════════════════════════════════════════════
+const QUICKSTART_META = {
+  fc:{kicker:'Flowchart',title:'기본 흐름부터 바로 그리기',desc:'화면 이동, 조건 분기, 팝업 흐름처럼 게임 UX 플로우를 빠르게 잡는 모드입니다.',starter:'기본 뼈대 만들기',tip:'추천 시작점: Start → Screen → Decision'},
+  fsm:{kicker:'State Machine',title:'상태 전이 구조부터 잡기',desc:'캐릭터 상태, AI 전이, UI 상태 전환처럼 상태 중심 설계에 적합합니다.',starter:'상태 뼈대 만들기',tip:'추천 시작점: Initial → Idle → Choice'},
+  bt:{kicker:'Behavior Tree',title:'AI 행동 트리부터 시작하기',desc:'Selector, Sequence, Condition, Action 순으로 묶어가며 AI 의사결정 흐름을 설계합니다.',starter:'AI 뼈대 만들기',tip:'추천 시작점: Root → Sequence → Condition/Action'},
+  sc:{kicker:'Sequence Chart',title:'객체 간 상호작용부터 정리하기',desc:'플레이어, NPC, 서버 사이 메시지 교환을 시간 순서대로 정리할 때 적합합니다.',starter:'메시지 뼈대 만들기',tip:'추천 시작점: Actor 2개 → Message 1개'},
+};
+function getViewportCenterWorld(){
+  const r=cvs.getBoundingClientRect();
+  return spt(r.left+r.width*0.5, r.top+r.height*0.5);
+}
+function createQuickStartSingleNode(){
+  const center=getViewportCenterWorld();
+  const presets={fc:['screen','Main Screen'],fsm:['state','Idle'],bt:['btroot','Root'],sc:['sclife',':Actor']};
+  const [type,label]=(presets[mode]||presets.fc);
+  createNode(type,center.x-75,center.y-28,null,label);
+  saveState('퀵스타트: 시작 노드 추가');
+  updateStatus();
+}
+function createQuickStartStarter(){
+  const center=getViewportCenterWorld();
+  if(mode==='fsm'){
+    const a=createNode('initial',center.x-220,center.y-20,null,'');
+    const b=createNode('state',center.x-40,center.y-30,null,'Idle');
+    const d=createNode('fsmchoice',center.x+210,center.y-45,null,'전이 조건');
+    createEdge(a,b,'r','l',null,'','');
+    createEdge(b,d,'r','l',null,'입력','');
+    saveState('퀵스타트: FSM 뼈대');
+  }else if(mode==='bt'){
+    const a=createNode('btroot',center.x-220,center.y-22,null,'Root');
+    const b=createNode('btseq',center.x-20,center.y-22,null,'Sequence');
+    const c1=createNode('btcond',center.x+220,center.y-110,null,'Condition');
+    const c2=createNode('btleaf',center.x+220,center.y+55,null,'Action');
+    createEdge(a,b,'r','l',null,'','');
+    createEdge(b,c1,'r','l',null,'check','');
+    createEdge(b,c2,'b','l',null,'run','');
+    saveState('퀵스타트: BT 뼈대');
+  }else if(mode==='sc'){
+    const a=createNode('sclife',center.x-220,center.y-120,null,':Player');
+    const b=createNode('sclife',center.x+40,center.y-120,null,':System');
+    const e=createEdge(a,b,'r','l',null,'요청','message()');
+    setEdgeStyle(e,'straight');
+    saveState('퀵스타트: 시퀀스 뼈대');
+  }else{
+    const a=createNode('terminal',center.x-240,center.y-28,null,'Start');
+    const b=createNode('screen',center.x-20,center.y-38,null,'Main Screen');
+    const d=createNode('decision',center.x+240,center.y-44,null,'조건 확인');
+    createEdge(a,b,'r','l',null,'','');
+    createEdge(b,d,'r','l',null,'다음','');
+    saveState('퀵스타트: 플로우 뼈대');
+  }
+  fitAll();
+  updateStatus();
+}
+function renderQuickStart(){
+  const el=document.getElementById('quickstart');
+  if(!el) return;
+  if(Object.keys(nodes).length){
+    el.style.display='none';
+    return;
+  }
+  const meta=QUICKSTART_META[mode]||QUICKSTART_META.fc;
+  el.innerHTML=`
+    <div class="qs-kicker">Quick Start · ${meta.kicker}</div>
+    <div class="qs-title">${meta.title}</div>
+    <div class="qs-desc">${meta.desc}</div>
+    <div class="qs-steps">
+      <div class="qs-step"><div class="qs-step-no">1</div><div>왼쪽 팔레트에서 필요한 노드를 드래그해서 캔버스에 놓습니다.</div></div>
+      <div class="qs-step"><div class="qs-step-no">2</div><div>노드의 앵커를 클릭해서 선을 연결하고, Inspector에서 텍스트와 속성을 채웁니다.</div></div>
+      <div class="qs-step"><div class="qs-step-no">3</div><div>완성 후 검증, 코드 리뷰, 로직 트레이스로 구조를 확인합니다.</div></div>
+    </div>
+    <div class="qs-actions">
+      <button class="qs-btn qs-btn-primary" onclick="createQuickStartStarter()">${meta.starter}</button>
+      <button class="qs-btn qs-btn-secondary" onclick="createQuickStartSingleNode()">노드 하나로 시작</button>
+      <button class="qs-btn qs-btn-secondary" onclick="spawnModeDemo()">예시 불러오기</button>
+      <button class="qs-btn qs-btn-secondary" onclick="document.getElementById('m-help').style.display='flex'">도움말 열기</button>
+    </div>
+    <div class="qs-tip">${meta.tip}</div>
+  `;
+  el.style.display='block';
+}
 function syncLineStyleButton(){
   const btn=document.getElementById('lstyle-btn');
   if(!btn) return;
@@ -119,6 +199,7 @@ function spawnModeDemo(targetMode){
   renderSheetBar();
   fitAll();
   saveState('예시 생성: '+m.toUpperCase());
+  renderQuickStart();
 }
 function loadDemo(){
   setMode('fc');
@@ -129,6 +210,7 @@ function loadDemo(){
   onPnameInput(name);
   fitAll();
   saveState('초기 데모 로드');
+  renderQuickStart();
 }
 
 // ══════════════════════════════════════════════════
