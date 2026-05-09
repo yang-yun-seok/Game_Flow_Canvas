@@ -54,6 +54,8 @@ let renameTarget = null;
 // Copy/Paste buffer
 let clipBundle = null;
 let pasteSeq = 0;
+const WORKSPACE_AUTOSAVE_KEY = 'gfc_workspace_autosave_v1';
+let autosaveTimer = 0;
 
 const msvg=document.getElementById('msvg');
 const VP=document.getElementById('VP');
@@ -84,6 +86,92 @@ function safeHexColor(v, fallback){
   const s=String(v||'').trim();
   return /^#[0-9a-fA-F]{6}$/.test(s) ? s : fallback;
 }
+function jClone(v){
+  return v == null ? v : JSON.parse(JSON.stringify(v));
+}
+function syncThemeUI(){
+  document.body.classList.toggle('light', lightMode);
+  const btn = document.getElementById('thbtn');
+  if(btn) btn.textContent = lightMode ? '☀️' : '🌙';
+}
+function getWorkspaceAutosavePayload(){
+  if(typeof snapshotCurrent !== 'function' || !Array.isArray(sheets) || !sheets.length) return null;
+  const currentSnap = jClone(snapshotCurrent());
+  const savedSheets = sheets.map(sh=>({
+    id: sh.id,
+    name: sh.name,
+    data: jClone(sh.id === activeSheetId ? currentSnap : sh.data)
+  }));
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    lightMode,
+    activeSheetId,
+    nextSheetId: typeof _sheetIdCnt === 'number' ? _sheetIdCnt : 0,
+    sheets: savedSheets
+  };
+}
+function flushWorkspaceAutosave(){
+  if(autosaveTimer){
+    clearTimeout(autosaveTimer);
+    autosaveTimer = 0;
+  }
+  const payload = getWorkspaceAutosavePayload();
+  if(!payload) return false;
+  try{
+    localStorage.setItem(WORKSPACE_AUTOSAVE_KEY, JSON.stringify(payload));
+    return true;
+  }catch(_){
+    return false;
+  }
+}
+function scheduleWorkspaceAutosave(){
+  if(autosaveTimer) clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(()=>{
+    autosaveTimer = 0;
+    flushWorkspaceAutosave();
+  }, 180);
+}
+function restoreWorkspaceAutosave(){
+  try{
+    const raw = localStorage.getItem(WORKSPACE_AUTOSAVE_KEY);
+    if(!raw) return false;
+    const payload = JSON.parse(raw);
+    if(!payload || !Array.isArray(payload.sheets) || !payload.sheets.length) return false;
+
+    lightMode = !!payload.lightMode;
+    syncThemeUI();
+
+    sheets = payload.sheets.map(sh=>({
+      id: sh.id,
+      name: sh.name || 'Untitled',
+      data: sh.data ? jClone(sh.data) : null
+    }));
+
+    const maxSheetId = sheets.reduce((max, sh)=>{
+      const n = parseInt(String(sh.id || '').replace(/\D/g,''), 10) || 0;
+      return Math.max(max, n);
+    }, 0);
+    _sheetIdCnt = Math.max(payload.nextSheetId || 0, maxSheetId);
+
+    const preferredId = payload.activeSheetId;
+    const active = sheets.find(sh=>sh.id === preferredId) || sheets[0];
+    if(!active || !active.data) return false;
+
+    activeSheetId = active.id;
+    sheetEditingId = null;
+    restoreSnapshot(active.data);
+    renderSheetBar();
+    clearSel();
+    updateInspector();
+    updateStatus();
+    return true;
+  }catch(_){
+    return false;
+  }
+}
+window.addEventListener('pagehide', ()=>{ flushWorkspaceAutosave(); });
+window.addEventListener('beforeunload', ()=>{ flushWorkspaceAutosave(); });
 
 // ── History Functions ──
 function saveState(lbl="상태 변경") {
@@ -97,6 +185,7 @@ function saveState(lbl="상태 변경") {
   // shift()로 앞을 제거하든 안 하든, 항상 historyIdx를 끝으로 맞춤
   if(history.length > 50) history.shift();
   historyIdx = history.length - 1;
+  scheduleWorkspaceAutosave();
 }
 
 function restoreState(stateStr) {
@@ -119,6 +208,7 @@ function undo() {
   if(historyIdx > 0) {
     historyIdx--;
     restoreState(history[historyIdx].data);
+    scheduleWorkspaceAutosave();
   }
 }
 
@@ -126,6 +216,7 @@ function redo() {
   if(historyIdx < history.length - 1) {
     historyIdx++;
     restoreState(history[historyIdx].data);
+    scheduleWorkspaceAutosave();
   }
 }
 
@@ -151,6 +242,7 @@ function jumpHistory(idx) {
   historyIdx = idx;
   restoreState(history[historyIdx].data);
   openHistory(); // 갱신
+  scheduleWorkspaceAutosave();
 }
 
 

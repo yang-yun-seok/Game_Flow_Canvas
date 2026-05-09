@@ -1089,8 +1089,8 @@ function setMode(m){
 // ══════════════════════════════════════════════════
 function toggleTheme(){
   lightMode=!lightMode;
-  document.body.classList.toggle('light',lightMode);
-  document.getElementById('thbtn').textContent=lightMode?'☀️':'🌙';
+  syncThemeUI();
+  scheduleWorkspaceAutosave();
 }
 
 

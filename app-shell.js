@@ -247,6 +247,7 @@ function renderSheetBar(){
         document.getElementById('pname').value = v;
       sheetEditingId = null;
       renderSheetBar();
+      scheduleWorkspaceAutosave();
     });
     nameEl.addEventListener('keydown', e=>{
       if(e.key==='Enter'){
@@ -313,6 +314,7 @@ function switchSheet(id){
   clearSel();
   updateInspector();
   updateStatus();
+  scheduleWorkspaceAutosave();
 }
 
 // 새 시트 추가
@@ -353,6 +355,7 @@ function addSheet(name, snapData, options){
     sheetEditingId = null;
     renderSheetBar();
   }
+  scheduleWorkspaceAutosave();
   return id;
 }
 
@@ -368,6 +371,7 @@ function removeSheet(id){
     restoreSnapshot(sheets[newIdx].data);
   }
   renderSheetBar();
+  scheduleWorkspaceAutosave();
 }
 
 // 상단 pname 변경 시 → 현재 시트 이름도 동기화
@@ -376,6 +380,7 @@ function onPnameInput(val){
   if(sh){
     sh.name = val || sh.name;
     renderSheetBar();
+    scheduleWorkspaceAutosave();
   }
 }
 
@@ -452,16 +457,19 @@ function onPnameInput(val){
 // INIT
 // ══════════════════════════════════════════════════
 (function initSheets(){
-  const firstId = newSheetId();
-  sheets.push({ id: firstId, name: 'Shop_UI_Flow', data: null });
-  activeSheetId = firstId;
   // pname 입력 → 시트 이름 동기화
   document.getElementById('pname').addEventListener('input', e=>{
     onPnameInput(e.target.value.trim());
   });
   applyVP();
-  loadDemo(); // 데모를 첫 시트에 로드
-  renderSheetBar();
+  if(!restoreWorkspaceAutosave()){
+    const firstId = newSheetId();
+    sheets.push({ id: firstId, name: 'Shop_UI_Flow', data: null });
+    activeSheetId = firstId;
+    loadDemo(); // 저장된 작업이 없을 때만 데모 로드
+    renderSheetBar();
+    flushWorkspaceAutosave();
+  }
   // 초기 렌더 후 툴팁 바인딩
   if(typeof refreshTooltips === 'function') refreshTooltips();
   fitAll();
