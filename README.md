@@ -1,37 +1,46 @@
-# Game_Flow_Canvas
+# 게임 플로우 캔버스
 
-Game flow diagram editor for beginner-friendly game design work.
+게임 기획자, UI/UX 디자이너, 레벨 디자이너가 게임 구조를 시각적으로 빠르게 정리할 수 있도록 만든 웹 기반 다이어그램 툴입니다.
 
-## Current Features
+브라우저에서 바로 열어서 사용할 수 있으며, 복잡한 설치 없이 화면 흐름, 상태 전이, AI 행동 구조, 시퀀스 상호작용을 한 곳에서 정리할 수 있습니다.
 
-- Multi-sheet canvas editing
-- Flowchart, FSM, Behavior Tree, and Sequence Chart modes
-- JSON import/export and PNG/SVG capture
-- Validation, pseudocode review, and logic trace tools
-- Local autosave and session restore in the browser
-- Empty-canvas quick start panel with mode-specific starter actions
+## 무엇을 할 수 있나요
 
-## Structure
+- 플로우차트 작성
+- 상태 머신(FSM) 설계
+- 비헤이비어 트리 구성
+- 시퀀스 차트 정리
+- 시트 단위로 여러 구조 분리 관리
+- JSON 저장/불러오기
+- PNG / SVG 캡처
+- 검증, 코드 리뷰, 로직 트레이스 기능
+- 로컬 자동 저장 및 세션 복구
 
-- `index.html`: document markup and UI layout
-- `styles.css`: application styles
-- `app-state.js`: shared state, DOM references, and small helpers
-- `app-render.js`: shape catalogue, node rendering, edge routing, edge rendering
-- `app-editor.js`: create/select/move/delete, viewport, mouse/keyboard editing
-- `app-io.js`: export/import, reset flows, capture/export helpers
-- `app-analysis.js`: validation, shortcuts, pseudocode review, logic trace
-- `app-shell.js`: demos, sheets, tooltips, bootstrap/init
-- `.github/workflows/deploy-pages.yml`: GitHub Pages deployment workflow
-- `.nojekyll`: disables Jekyll processing for static hosting safety
+## 이런 분께 맞습니다
 
-## Current Refactor Direction
+- 게임 UI 흐름을 빠르게 정리하고 싶은 분
+- 기획 문서를 도식화해서 팀과 공유하고 싶은 분
+- 상태 전이, AI 구조, 이벤트 흐름을 한눈에 보고 싶은 분
+- 프로토타입 단계에서 복잡한 툴보다 가볍고 빠른 도구가 필요한 분
 
-- Keep runtime behavior unchanged while reducing file responsibility
-- Use the current split as the base for the next cleanup pass:
-  - state/model separation
-  - mode-specific module boundaries
-  - validation/trace feature extraction
+## 사용 방법
 
-## Refactor Notes
+1. 왼쪽 팔레트에서 노드를 캔버스로 드래그합니다.
+2. 노드의 앵커를 눌러 다른 노드와 연결합니다.
+3. 좌측 속성 패널에서 라벨과 속성을 수정합니다.
+4. 상단 도구로 검증, 코드 리뷰, 로직 트레이스를 실행합니다.
+5. 필요하면 JSON으로 저장하거나 PNG/SVG로 내보냅니다.
 
-- See `docs/REFACTORING.md` for the next extraction order and guardrails.
+처음 실행하면 빈 캔버스용 퀵스타트 패널이 표시되어, 예시 없이도 바로 시작할 수 있습니다.
+
+## 실행
+
+정적 웹 프로젝트이므로 `index.html`을 브라우저에서 열면 바로 사용할 수 있습니다.
+
+GitHub Pages로 배포하면 별도 서버 없이 웹에서 바로 접근할 수 있습니다.
+
+## 프로젝트 목적
+
+이 프로젝트는 게임 흐름 설계를 더 빠르고 직관적으로 만드는 것을 목표로 합니다.
+
+복잡한 문서 작성 전에 아이디어를 구조로 정리하고, 팀 내 커뮤니케이션 비용을 줄이는 데 초점을 두고 있습니다.
