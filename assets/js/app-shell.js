@@ -2,10 +2,10 @@
 // DEMO
 // ══════════════════════════════════════════════════
 const QUICKSTART_META = {
-  fc:{kicker:'Flowchart',title:'기본 흐름부터 바로 그리기',desc:'화면 이동, 조건 분기, 팝업 흐름처럼 게임 UX 플로우를 빠르게 잡는 모드입니다.',starter:'기본 뼈대 만들기',tip:'추천 시작점: Start → Screen → Decision'},
-  fsm:{kicker:'State Machine',title:'상태 전이 구조부터 잡기',desc:'캐릭터 상태, AI 전이, UI 상태 전환처럼 상태 중심 설계에 적합합니다.',starter:'상태 뼈대 만들기',tip:'추천 시작점: Initial → Idle → Choice'},
-  bt:{kicker:'Behavior Tree',title:'AI 행동 트리부터 시작하기',desc:'Selector, Sequence, Condition, Action 순으로 묶어가며 AI 의사결정 흐름을 설계합니다.',starter:'AI 뼈대 만들기',tip:'추천 시작점: Root → Sequence → Condition/Action'},
-  sc:{kicker:'Sequence Chart',title:'객체 간 상호작용부터 정리하기',desc:'플레이어, NPC, 서버 사이 메시지 교환을 시간 순서대로 정리할 때 적합합니다.',starter:'메시지 뼈대 만들기',tip:'추천 시작점: Actor 2개 → Message 1개'},
+  fc:{kicker:'Flowchart Mode',title:'Map The Player Journey',desc:'화면 이동, 조건 분기, 팝업 흐름처럼 게임 UX 플로우를 빠르게 정리할 수 있습니다.',starter:'Generate Flow Skeleton',tip:'Start → Screen → Decision 순서로 시작하면 가장 빠릅니다.',image:"url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1600&q=80')"},
+  fsm:{kicker:'State Machine Mode',title:'Design State Transitions',desc:'캐릭터 상태, AI 전이, UI 상태 전환처럼 상태 중심 설계를 한눈에 정리할 수 있습니다.',starter:'Generate State Skeleton',tip:'Initial → Idle → Choice 구조로 먼저 뼈대를 잡으세요.',image:"url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1600&q=80')"},
+  bt:{kicker:'Behavior Tree Mode',title:'Compose AI Decision Logic',desc:'Selector, Sequence, Condition, Action 순서로 AI 의사결정 흐름을 깔끔하게 구성할 수 있습니다.',starter:'Generate AI Skeleton',tip:'Root → Sequence → Condition / Action 조합이 가장 안정적입니다.',image:"url('https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?auto=format&fit=crop&w=1600&q=80')"},
+  sc:{kicker:'Sequence Chart Mode',title:'Track Object Interaction',desc:'플레이어, NPC, 서버 사이 메시지 교환을 시간 순서대로 시각화할 수 있습니다.',starter:'Generate Sequence Skeleton',tip:'Actor 두 개와 Message 하나로 시작한 뒤 세부 흐름을 늘리세요.',image:"url('https://images.unsplash.com/photo-1502134249126-9f3755a50d78?auto=format&fit=crop&w=1600&q=80')"},
 };
 function getViewportCenterWorld(){
   const r=cvs.getBoundingClientRect();
@@ -62,22 +62,25 @@ function renderQuickStart(){
     return;
   }
   const meta=QUICKSTART_META[mode]||QUICKSTART_META.fc;
+  el.style.setProperty('--qs-image', meta.image);
   el.innerHTML=`
-    <div class="qs-kicker">Quick Start · ${meta.kicker}</div>
-    <div class="qs-title">${meta.title}</div>
-    <div class="qs-desc">${meta.desc}</div>
-    <div class="qs-steps">
-      <div class="qs-step"><div class="qs-step-no">1</div><div>왼쪽 팔레트에서 필요한 노드를 드래그해서 캔버스에 놓습니다.</div></div>
-      <div class="qs-step"><div class="qs-step-no">2</div><div>노드의 앵커를 클릭해서 선을 연결하고, Inspector에서 텍스트와 속성을 채웁니다.</div></div>
-      <div class="qs-step"><div class="qs-step-no">3</div><div>완성 후 검증, 코드 리뷰, 로직 트레이스로 구조를 확인합니다.</div></div>
+    <div class="qs-shell">
+      <div class="qs-brand">Game Flow Canvas</div>
+      <div class="qs-kicker">${meta.kicker}</div>
+      <div class="qs-title">${meta.title}</div>
+      <div class="qs-desc">${meta.desc}</div>
+      <div class="qs-steps">
+        <div class="qs-step"><div class="qs-step-no">01</div><div>왼쪽 팔레트에서 필요한 노드를 끌어다 놓고 기본 구조를 배치합니다.</div></div>
+        <div class="qs-step"><div class="qs-step-no">02</div><div>노드 앵커를 눌러 선을 연결하고 Inspector에서 라벨과 속성을 채웁니다.</div></div>
+        <div class="qs-step"><div class="qs-step-no">03</div><div>검증, 코드 리뷰, 로직 트레이스로 설계가 막히는 지점을 바로 확인합니다.</div></div>
+      </div>
+      <div class="qs-actions">
+        <button class="qs-btn qs-btn-primary" onclick="createQuickStartStarter()">${meta.starter}</button>
+        <button class="qs-btn qs-btn-secondary" onclick="spawnModeDemo()">Load Demo</button>
+        <button class="qs-btn qs-btn-secondary" onclick="document.getElementById('m-help').style.display='flex'">Open Guide</button>
+      </div>
+      <div class="qs-tip">${meta.tip}</div>
     </div>
-    <div class="qs-actions">
-      <button class="qs-btn qs-btn-primary" onclick="createQuickStartStarter()">${meta.starter}</button>
-      <button class="qs-btn qs-btn-secondary" onclick="createQuickStartSingleNode()">노드 하나로 시작</button>
-      <button class="qs-btn qs-btn-secondary" onclick="spawnModeDemo()">예시 불러오기</button>
-      <button class="qs-btn qs-btn-secondary" onclick="document.getElementById('m-help').style.display='flex'">도움말 열기</button>
-    </div>
-    <div class="qs-tip">${meta.tip}</div>
   `;
   el.style.display='block';
 }
